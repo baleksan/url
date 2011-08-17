@@ -18,10 +18,12 @@ import java.util.regex.Pattern;
  *
  * @author <a href="mailto:baleksan@yammer-inc.com" boris/>
  */
-public class UrlExtractor {
+public class UrlExtractor
+{
     private static final Logger LOG = LoggerFactory.getLogger(UrlExtractor.class);
 
-    public static interface URLMatchHandler {
+    public static interface URLMatchHandler
+    {
 
         /**
          * It is called when new url string is found in the text.
@@ -34,20 +36,37 @@ public class UrlExtractor {
         boolean matchURL(String urlString, int start, int end);
     }
 
-    public static class URLCollectingHandler implements URLMatchHandler {
+    /**
+     * Determines if the urlString is a url or not
+     *
+     * @param urlString
+     * @return true if the urlString is a url false otherwise
+     */
+    public static boolean isUrl(String urlString)
+    {
+        UrlExtractor extractor = new UrlExtractor();
+        URLCollectingHandler handler = new URLCollectingHandler(1);
+        extractor.matchURLs(urlString, handler);
+        return !handler.getURLs().isEmpty();
+    }
+
+    public static class URLCollectingHandler implements URLMatchHandler
+    {
         private List<URL> urls = new ArrayList<URL>();
         private Set<String> urlStrings = new HashSet<String>();
         private Integer limit;
         private int count;
 
-        public URLCollectingHandler(Integer limit) {
+        public URLCollectingHandler(Integer limit)
+        {
             if (limit != null && limit <= 0) {
                 throw new IllegalArgumentException("Limit passed in must be greater than 0: " + limit);
             }
             this.limit = limit;
         }
 
-        public boolean matchURL(String urlString, int start, int end) {
+        public boolean matchURL(String urlString, int start, int end)
+        {
             if (urlStrings.contains(urlString)) {
                 return takeNext();
             }
@@ -68,15 +87,18 @@ public class UrlExtractor {
             return takeNext();
         }
 
-        private boolean isAccepted(URL url) {
+        private boolean isAccepted(URL url)
+        {
             return url.getProtocol().matches("https?");
         }
 
-        private boolean takeNext() {
+        private boolean takeNext()
+        {
             return (limit == null || count < limit);
         }
 
-        public List<URL> getURLs() {
+        public List<URL> getURLs()
+        {
             return new ArrayList<URL>(urls);
         }
     }
@@ -162,17 +184,20 @@ public class UrlExtractor {
     private static final Pattern PROTOCOL_PATTERN = Pattern.compile("^(ftp|https?)://", Pattern.CASE_INSENSITIVE);
 
 
-    public List<URL> extractURLs(String content, Integer limit) {
+    public List<URL> extractURLs(String content, Integer limit)
+    {
         URLCollectingHandler c = new URLCollectingHandler(limit);
         matchURLs(content, c);
         return c.getURLs();
     }
 
-    public void findURLs(String content, URLMatchHandler handler) {
+    public void findURLs(String content, URLMatchHandler handler)
+    {
         matchURLs(content, handler);
     }
 
-    private void matchURLs(String content, URLMatchHandler handler) {
+    private void matchURLs(String content, URLMatchHandler handler)
+    {
         Matcher m = URL_PATTERN.matcher(content);
         while (m.find()) {
             String urlString = m.group();
@@ -197,7 +222,7 @@ public class UrlExtractor {
                 sb.append(protocol.toLowerCase()).append(urlString.substring(protocol.length()));
             }
 
-            // remove the trailing / - per FL-3821 - URL resolves to the same thing
+            // remove the trailing - URL resolves to the same thing
             // and we have less dupes
             if (sb.charAt(sb.length() - 1) == '/') {
                 sb.deleteCharAt(sb.length() - 1);
@@ -218,11 +243,13 @@ public class UrlExtractor {
      * @return True if the given potentialUrlString contains only digits and/or
      *         dots.
      */
-    private boolean containsOnlyDigitsAndDots(String potentialUrlString) {
+    private boolean containsOnlyDigitsAndDots(String potentialUrlString)
+    {
         return !Pattern.compile("[^\\d\\.]").matcher(potentialUrlString).find();
     }
 
-    public List<String> extractUrls(String content) {
+    public List<String> extractUrls(String content)
+    {
         return null;
     }
 }
